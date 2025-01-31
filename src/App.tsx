@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.scss';
 import { peopleFromServer } from './data/people';
 import { Person } from './types/Person';
@@ -10,7 +10,7 @@ export const App: React.FC = () => {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [message, setMessage] = useState('No selected person');
   const [showDropdown, setShowDropdown] = useState(false);
-  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const debounceDelay = 300;
 
   const filterPeople = useCallback((value: string) => {
@@ -31,14 +31,13 @@ export const App: React.FC = () => {
       setMessage('No selected person');
     }
     
-    if (debounceTimeout) {
-      clearTimeout(debounceTimeout);
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
     }
     
-    const timeout = setTimeout(() => {
+    debounceTimeout.current = setTimeout(() => {
       filterPeople(value);
     }, debounceDelay);
-    setDebounceTimeout(timeout);
   };
 
   const onSelected = (person: Person) => {
@@ -74,7 +73,7 @@ export const App: React.FC = () => {
                     <div 
                       className="dropdown-item"
                       data-cy="suggestion-item"
-                      key={person.name} 
+                      key={`${person.name}-${person.born}`} 
                       onClick={() => onSelected(person)}>
                       <p className="has-text-link">{person.name}</p>
                     </div>
